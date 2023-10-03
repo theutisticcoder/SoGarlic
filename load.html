@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<link rel="icon" href="garlic.jpg">
+	<link rel="manifest" href="manifest.json">
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	  <script id="DragDropTouch" src="https://bernardo-castilho.github.io/DragDropTouch/DragDropTouch.js"></script>
+
+  <title>SoGarlic</title>
+</head>
+<body>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.4/socket.io.js" integrity="sha512-YeeA/Qxn5hYdkukScTCNNOhTrv1C2RubAGButJ1rmgQwZf/HdRaCGl+JAVkqsqaNRaYNHdheiuKKuPf9mDcqKg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<style>
+	h1, button{
+		position: absolute;
+	}
+	#board, #cards{
+		scale: 0.3 0.3 0.3;
+	}
+	#board{
+		position: absolute;
+		top: 300px;
+	}
+	
+	.dropper{
+		 height: 500px;
+		 width:500px;
+		 border-radius: 20%;
+		 border: 2px solid red;
+		 position:absolute;
+	}
+	#clues{
+		position: absolute;
+		left: 300px;
+	}
+  .card{
+		 height: 500px;
+		 width:500px;
+		 background: lightgreen;
+		 border-radius: 20%;
+		 border: 2px solid black;
+		 position:sticky;
+	 }
+	button{
+		top: 100px;
+		font-size: 20pt;
+	}
+	#cards{
+		position: absolute;
+		top: -200px;
+		left: 200px;
+	}
+	#cards > *{
+		position: sticky;
+	}
+	.left{
+		top: 150px;
+		z-index: 1;
+		transform: rotateZ(-90deg);
+		position: absolute;
+		font-size: 30pt;
+	}
+	.right{
+		top: 150px;
+		z-index: 1;
+		left: 425px;
+		transform: rotateZ(90deg);
+		position: absolute;
+		font-size: 30pt;
+	}
+	.top{
+		left: 200px;
+		z-index: 1;
+		position: absolute;
+		font-size: 30pt;
+	}
+	.bottom{
+		left: 200px;
+		z-index: 1;
+		top: 400px;
+		position: absolute;
+		font-size: 30pt;
+		transform: rotateZ(180deg);
+	}
+</style>
+
+	<div id="game" hidden="true">
+		<div id="board"></div>
+	<div id="guess">
+		<h1>Final Guess</h1>
+	<button id="submit">Submit Final Guess</button>
+	</div>
+	
+	
+	<h1 id="clues"></h1>
+	
+<div id="cards"><div id="card" hidden="true" draggable="true" class="card" ></div>
+</div>
+	</div>
+		<button onclick="newroom()">Create Room</button>
+	<button onclick="roomjoin()">Join Room</button>
+	<script>
+		const socket = io();
+		function newroom(){
+			var room = prompt("Choose a room name.");
+			var password = prompt("Choose a password.");
+			socket.emit("room", room);
+			socket.emit("password", password);
+		}
+		function roomjoin(){
+			var room2 = prompt("Enter the room name.");
+			var password2 = prompt("Enter the password.");
+			socket.emit("roomguess", room2);
+			socket.emit("passwordguess", password2);
+		}
+		socket.on("nope", ()=> {
+			alert("Not found, reloading now.");
+			location.reload();
+		})
+		socket.on("game", room=> {
+			var c = confirm("Start game yet? Another person joined.");
+			if(c == true) socket.emit("startgame", room);
+		})
+		socket.on("gamestart", ()=> {
+	document.getElementById("game").hidden = false;
+		})
+			
+			
+			if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("serviceworker.js");
+}
+			alert("Welcome to SoGarlic. The person who is choosing clues will be told to choose a one word clue for 4 pairs of words. The other players will get 5 cards. Drag and drop the cards into the red slots so that the edges of the correct 4 cards align with the clues. Good Luck!")
+			function drag(e) {
+				console.log(e.target);
+							e.dataTransfer.setData("text/plain", e.target.id);
+				}
+
+			var wordlist = [];
+			var wordslist = [];
+			var clues = [];
+			var cluetop;
+			var cluebottom;
+			var clueleft;
+			var clueright;
+			var card = document.getElementById("card");
+			
+		var arrayofcards;
+			var p;
+			var cards = 0;
+    const socket = io();
+			socket.on("roomname", room=> {
+				if(sessionStorage.getItem("room") != null){
+					socket.emit("room", sessionStorage.getItem("room"));
+				}
+				else{
+					sessionStorage.setItem("room", room);
+					socket.emit("noroom", room);
+				}
+			})
+			socket.on("start", ()=> {
+				document.getElementById("board").hidden = true;					
+				document.getElementById("submit").hidden = true;			
+				document.getElementById("clues").hidden = true;
+					for(let i = 0;i<5;i++){
+				card = card.cloneNode();
+			card.hidden = false;
+						if(i === 0){
+							card.id = "1";
+						}
+				if(i === 1){
+					card.style.left = "500px";
+					card.id = "2";
+				}
+				if(i === 2){
+					card.id ="3";
+					card.style.left = "1000px";
+				}
+				if(i === 3){
+					card.id = "4";
+					card.style.left = "1500px";
+				}
+						if(i === 4){
+					card.id = "5";
+					card.style.left = "2000px";
+				}
+				document.getElementById("cards").appendChild(card);
+				socket.emit("addcard");
+			}
+			 arrayofcards = Array.from(document.getElementById("cards").children);
+
+			});
+		
+			socket.on("words", words=> {
+				wordslist.push(words);
+				cards++;
+				if(cards === 5){
+					cluetop = prompt("Choose a one word clue related to "+ wordslist[0][1] + " and " + wordslist[1][1] + ".");
+					clueright = prompt("Choose a one word clue related to "+ wordslist[1][2] + " and " + wordslist[3][2] + ".");
+					cluebottom = prompt("Choose a one word clue related to "+ wordslist[3][3] + " and " + wordslist[2][3] + ".");
+					clueleft = prompt("Choose a one word clue related to "+ wordslist[2][0] + " and " + wordslist[0][0] + ".");
+					clues.push(cluebottom);
+					clues.push(cluetop);
+					clues.push(clueleft);
+					clues.push(clueright);
+					socket.emit("cards", wordslist);
+					socket.emit("keys", clues);
+					socket.emit("top", (wordslist[0][1]  + wordslist[1][1]))
+					socket.emit("right", (wordslist[1][2] + wordslist[3][2]))
+					socket.emit("bottom", (wordslist[3][3] + wordslist[2][3]))
+					socket.emit("left", (wordslist[2][0] + wordslist[0][0]))
+					wordslist = [];
+					clues = [];
+				}
+			});
+			socket.on("getcards", words => {
+				document.getElementById("board").hidden = false;
+					for(let i = 0;i < 5;i++){
+						console.log(words);
+				card = card.cloneNode();
+						card.onclick = (e)=>{
+				console.log(getComputedStyle(e.target).getPropertyValue("rotate"));
+			};
+					card.hidden = false;						
+						card.id = i;
+						console.log(card.children);
+						card.ondragstart = drag;
+				if(i === 0){
+				p = document.createElement("p");
+				p.classList.add("left");
+				p.innerHTML = words[0][0];
+				card.appendChild(p);
+				p = document.createElement("p");
+				p.classList.add("top");
+				p.innerHTML = words[0][1];
+				card.appendChild(p);
+				p = document.createElement("p");
+				p.classList.add("right");
+				p.innerHTML = words[0][2];
+				card.appendChild(p);
+				p = document.createElement("p");
+				p.classList.add("bottom");
+				p.innerHTML = words[0][3];
+				card.appendChild(p);
+				}
+				if(i === 1){
+					p = document.createElement("p");
+				p.classList.add("left");
+				p.innerHTML = words[1][0];
+				card.appendChild(p);
+				p = document.createElement("p");
+				p.classList.add("top");
+				p.innerHTML = words[1][1];
+				card.appendChild(p);
+				p = document.createElement("p");
+				p.classList.add("right");
+				p.innerHTML = words[1][2];
+				card.appendChild(p);
+				p = document.createElement("p");
+				p.classList.add("bottom");
+				p.innerHTML = words[1][3];
+				card.appendChild(p);
+				}
+				if(i === 2){
+					
+					p = document.createElement("p");
+				p.classList.add("left");
+				p.innerHTML = words[2][0];
+				card.appendChild(p);
+				p = document.createElement("p");
+				p.classList.add("top");
+				p.innerHTML = words[2][1];
+				card.appendChild(p);
+				p = document.createElement("p");
+				p.classList.add("right");
+				p.innerHTML = words[2][2];
+				card.appendChild(p);
+				p = document.createElement("p");
+				p.classList.add("bottom");
+				p.innerHTML = words[2][3];
+				card.appendChild(p);
+				}
+				if(i === 3){
+					p = document.createElement("p");
+				p.classList.add("left");
+				p.innerHTML = words[3][0];
+				card.appendChild(p);
+				p = document.createElement("p");
+				p.classList.add("top");
+				p.innerHTML = words[3][1];
+				card.appendChild(p);
+				p = document.createElement("p");
+				p.classList.add("right");
+				p.innerHTML = words[3][2];
+				card.appendChild(p);
+				p = document.createElement("p");
+				p.classList.add("bottom");
+				p.innerHTML = words[3][3];
+				card.appendChild(p);
+					
+				}
+						if(i === 4){
+					p = document.createElement("p");
+				p.classList.add("left");
+				p.innerHTML = words[4][0];
+				card.appendChild(p);
+				p = document.createElement("p");
+				p.classList.add("top");
+				p.innerHTML = words[4][1];
+				card.appendChild(p);
+				p = document.createElement("p");
+				p.classList.add("right");
+				p.innerHTML = words[4][2];
+				card.appendChild(p);
+				p = document.createElement("p");
+				p.classList.add("bottom");
+				p.innerHTML = words[4][3];
+				card.appendChild(p);
+					
+				}
+				document.getElementById("cards").appendChild(card);
+			}
+							});
+var dropper;
+			socket.on("extra",()=>{
+				
+					dropper = document.createElement("div");
+				dropper.ondrop = (e)=> {
+					e.preventDefault();
+					const data = e.dataTransfer.getData("text/plain");
+					document.getElementById(data).setAttribute("id", "part1");
+    e.currentTarget.appendChild(document.getElementById("part1"));
+					document.getElementById("part1").style.zIndex = "3";
+				};
+			dropper.ondragover = (e)=> {
+				e.preventDefault();
+			}
+			dropper.classList.add("dropper");
+			document.getElementById("board").appendChild(dropper);
+				dropper = dropper.cloneNode();
+				dropper.ondrop = (e)=> {
+					e.preventDefault();
+					const data = e.dataTransfer.getData("text/plain");
+					document.getElementById(data).setAttribute("id", "part2");
+    e.currentTarget.appendChild(document.getElementById("part2"));
+					document.getElementById("part2").style.zIndex = "3";
+				};
+			dropper.ondragover = (e)=> {
+				e.preventDefault();
+			}
+				dropper.style.left = "500px";
+				document.getElementById("board").appendChild(dropper);
+				dropper = dropper.cloneNode();
+				dropper.style.left = "0px";
+				dropper.ondrop = (e)=> {
+					e.preventDefault();
+					const data = e.dataTransfer.getData("text/plain");
+					document.getElementById(data).setAttribute("id", "part3");
+    e.currentTarget.appendChild(document.getElementById("part3"));
+					document.getElementById("part3").style.zIndex = "3";
+				};
+				
+			dropper.ondragover = (e)=> {
+				e.preventDefault();
+			}
+				dropper.style.top = "500px";
+				document.getElementById("board").appendChild(dropper);
+				dropper = dropper.cloneNode();
+				dropper.style.left = "500px";
+				dropper.ondrop = (e)=> {
+					e.preventDefault();
+					const data = e.dataTransfer.getData("text/plain");
+					document.getElementById(data).setAttribute("id", "part4");
+    e.currentTarget.appendChild(document.getElementById("part4"));
+					document.getElementById("part4").style.zIndex = "3";
+				};
+			dropper.ondragover = (e)=> {
+				e.preventDefault();
+			}
+				dropper.style.top = "500px";
+				document.getElementById("board").appendChild(dropper);
+			});
+			socket.on("clues", clueslist => {
+				document.getElementById("clues").innerHTML = "Clues: " + clueslist[1] + ", " + clueslist[3] + ", " + clueslist[0] + ", " + clueslist[2] + ".";
+			});
+			document.getElementById("submit").onclick = ()=> {
+					socket.emit("top1",(document.getElementById("part1").children[1].innerHTML + document.getElementById("part2").children[1].innerHTML));
+					socket.emit("right1", (document.getElementById("part2").children[2].innerHTML +document.getElementById("part4").children[2].innerHTML));
+					socket.emit("bottom1", (document.getElementById("part4").children[3].innerHTML +document.getElementById("part3").children[3].innerHTML));
+					socket.emit("left1", (document.getElementById("part3").children[0].innerHTML + document.getElementById("part1").children[0].innerHTML));
+			};
+			socket.on("good", ()=> {
+				alert("You got it correct! Good job!");
+				document.getElementById("submit").hidden = true;
+			});
+			socket.on("bad", ()=> {
+				alert("You got it wrong! Better luck next time!");
+				document.getElementById("submit").hidden = true;
+			});
+			socket.on("wrong", ()=> {
+				alert("Someone got it wrong!");
+			});
+			socket.on("correct", ()=> {
+				alert("Someone got it right!");
+			});
+			socket.on("refresh", ()=> {
+			});
+			socket.on("newstart", ()=> {
+				cards = 0;
+				alert("New game starting...");
+				document.getElementById("submit").hidden = false;
+				Array.from(document.getElementById("cards").children).forEach(child => {
+					if(child != Array.from(document.getElementById("cards").children)[0]) child.remove();
+				});				
+				Array.from(document.getElementById("board").children).forEach(child=>{
+									child.replaceChildren();
+								});
+
+							document.getElementById("clues").hidden = false;
+
+			});
+
+			
+
+  </script>
+	
+</body>
+</html>
